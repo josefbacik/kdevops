@@ -6,15 +6,22 @@
   failed_when: vagrant_present.rc != 0 and vagrant_present.rc != 1
   tags: [ 'vagrant', 'verify' ]
 
-- name: Downlaod vagrant from the latest release and install locally
+- name: Enable the vagrant Fedora repo
   become: yes
   become_method: sudo
-  unarchive:
-    src: https://releases.hashicorp.com/vagrant/{{ vagrant_version }}/vagrant_{{ vagrant_version }}_linux_amd64.zip
-    dest: /usr/local/bin
-    remote_src: yes
+  command: "dnf config-manager --add-repo https://rpm.releases.hashicorp.com/fedora/hashicorp.repo"
+  args:
+    warn: false
   when:
     - force_install_if_present|bool or vagrant_present.rc != 0
+
+- name: Install latest version of Vagrant
+  become: yes
+  become_method: sudo
+  yum:
+    name: vagrant
+    state: present
+  when: vagrant_present.rc != 0
 
 # This is a major heck, alas, vagrant plugin subset commands do not have any
 # easy way to confirm if a plugin is installed in a straight forward way.
